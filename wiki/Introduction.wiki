@@ -10,13 +10,13 @@ This instructions on this page assumes you have access to Visual Studio 2008 or 
 
 Remember to set choose .NET Framework 3.5 or higher. Choose C#, VB.NET or whatever language you are most comfortable with - NCron does not care, but the code samples on this website are mostly in C#.
 
-intro-newproj.png
+http://ncron.googlecode.com/svn/wiki/images/intro-newproj.png
 
 ==Step 2 - Add a reference to the NCron assembly==
 
 Make sure you have the newest public release of NCron (or your own build if you prefer) somewhere on your file system. Use the "Add Reference..." dialog to reference the assembly from your console application:
 
-intro-addref.png
+http://ncron.googlecode.com/svn/wiki/images/intro-addref.png
 
 ==Step 3 - Add one of more job types to your project==
 
