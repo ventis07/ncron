@@ -1,0 +1,83 @@
+=Building a scheduling service with NCron=
+
+_*Important notice!* All documentation is targeting NCron 2.0, which is still in development. The architecture of NCron 1.0 is completely different, and the documentation will not really help you with that. Give 2.0 a try from trunk, or stay tuned for an official release - hopefully very soon._
+
+Building a scheduling service with NCron is supposed to be as frictionless as possible, allowing you to focus on the real business logic in your project.
+
+This instructions on this page assumes you have access to Visual Studio 2008 or newer. It is most certainly possible to use NCron without Visual Studio, and the following guide should still give you all the hints you need to get started.
+
+==Step 1 - Create a new "Console Application" project==
+
+Remember to set choose .NET Framework 3.5 or higher. Choose C#, VB.NET or whatever language you are most comfortable with - NCron does not care, but the code samples on this website are mostly in C#.
+
+intro-newproj.png
+
+==Step 2 - Add a reference to the NCron assembly==
+
+Make sure you have the newest public release of NCron (or your own build if you prefer) somewhere on your file system. Use the "Add Reference..." dialog to reference the assembly from your console application:
+
+intro-addref.png
+
+==Step 3 - Add one of more job types to your project==
+
+Simply create classes in your project (or in seperate library projects referenced by the console application), and let your classes extend the abstract CronJob class. The class only has an abstract method Execute() which you will need to implement. This is where you place the logic of your job:
+
+{{{
+public class RecordDayOfWeekJob : NCron.CronJob
+{
+    public override void Execute()
+    {
+        string dayOfWeek = DateTime.Now.DayOfWeek.ToString();
+        System.IO.File.WriteAllText(@"c:\dayofweek.txt", dayOfWeek);
+    }
+}
+}}}
+
+If your job implementation uses unmanaged resources, you can override the Dispose(bool) method to ensure that everything gets cleaned up after use.
+
+==Step 4 - Add one line of boiler plate code==
+
+When you created your project, Visual Studio created a Program.cs file for you. This files contains a class with a static method Main(), serving as the entry point of your application. From this method you will need to invoke the NCron service, passing along the provided command line arguments:
+
+{{{
+using NCron.Service;
+using NCron.Service.Reflection;
+
+static void Main(string[] args)
+{
+    Bootstrap.Main(args, ServiceSetup);
+}
+}}}
+
+After adding this line, your program will no longer compile, but we will fix this in the next step.
+
+It is recommended that you do not do anything else in the Main() method, as debugging exceptions thrown here is a pain, when your application is running as a Windows service.
+
+==Step 5 - Schedule your task for execution==
+
+Now, let's fix that compile error by adding the missing method to the Program class:
+
+{{{
+static void ServiceSetup(NCron.SchedulingService service)
+{
+    service.At("0 0 * * *").Run<RecordDayOfWeekJob>();
+}
+}}}
+
+If your are wondering what the magic string "0 0 * * *" means, it is a [crontab expression]. These strings let you define date/time patterns in a very consise manner, and they are used for job scheduling on most unix based systems. This specific crontab tells the system to run the job at midnight each day. If you really don't like them, you are welcome to use one of the overloads of AddSchedule() that takes an ISchedule instead of a string.
+
+==Step 6 - Compile, deploy and start service==
+
+Compilation is no different than with any other Visual Studio project. The output is an EXE file and a bunch of referenced DLL files. Copy the output to the server where the job is required to run, and install the service by opening a command line in the installation folder and running this command:
+
+{{{
+AcmeCronJobs install
+}}}
+
+Remember to replace AcmeCronJobs with the name of your project/assembly. In the command prompt, type the following to start the service:
+
+{{{
+net start AcmeCronJobs
+}}}
+
+Your service is now be running, and it will automatically be started again if the server gets rebooted. Watch the Application event log for messages from the service. Each job invocation will be logged, along with any unhandled exceptions from your jobs. If you prefer logging in a text file, email, or something else, it is perfectly possible to [replace the logging]. It is also possible (and encouraged) to write [additional custom messages] to the log.
