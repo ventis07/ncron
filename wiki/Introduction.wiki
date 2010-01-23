@@ -1,3 +1,6 @@
+#summary Learn the basics of how to build a scheduling service with NCron
+#labels Featured
+
 =Building a scheduling service with NCron=
 
 _*Important notice!* All documentation is targeting NCron 2.0, which is still in development. The architecture of NCron 1.0 is completely different, and the documentation will not really help you with that. Give 2.0 a try from trunk, or stay tuned for an official release - hopefully very soon._
