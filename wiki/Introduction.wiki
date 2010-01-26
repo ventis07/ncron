@@ -72,7 +72,7 @@ Tip: It is _highly_ recommended that you do not do anything in the Main() method
 We are now ready to add our first schedule to the service. Try adding the following to the `SerivceSetup` method body:
 
 {{{
-service.Hourly().Run<RecordDayOfWeekJob>();
+service.Hourly().Run<DataUpdateJob>();
 }}}
 
 This obviously tells NCron to execute your job once every hour. The fluent API is extremely flexible, and it enables you to specify (almost) any [FluentScheduling schedule] for several flavors of [FluentJobRegistration job registration].

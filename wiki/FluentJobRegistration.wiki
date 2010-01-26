@@ -9,6 +9,11 @@ Assuming that you are already aware of the different approaches to [FluentSchedu
 
 In all examples you have seen this far, jobs have been referenced using a generic `Run<TJob>()` method. This extension method lives in the `NCron.Fluent.Generics` namespace, and is usually the easiest and most readable way to express job registrations.
 
+{{{
+service.Hourly().Run<DrinkCoffee>();
+service.At("0 9 * * 1").Run<EatBaconAndEggs>();
+}}}
+
 Using the generic `Run<TJob>()` method requires the `TJob` type to implement `ICronJob` and to have a default (parameterless) constructor. The latter is a problem if you need to define a job that needs to be run with different arguments. Example:
 
 {{{
