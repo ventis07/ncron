@@ -1,73 +1,81 @@
 #summary Learn the basics of how to build a scheduling service with NCron
 #labels Featured
 
-=Building a scheduling service with NCron=
-
-_*Important notice!* All documentation is targeting NCron 2.0, which is still in development. The architecture of NCron 1.0 is completely different, and the documentation will not really help you with that. Give 2.0 a try from trunk, or stay tuned for an official release - hopefully very soon._
+= Building a scheduling service with NCron =
 
 Building a scheduling service with NCron is supposed to be as frictionless as possible, allowing you to focus on the real business logic in your project.
 
 This instructions on this page assumes you have access to Visual Studio 2008 or newer. It is most certainly possible to use NCron without Visual Studio, and the following guide should still give you all the hints you need to get started.
 
-==Step 1 - Create a new "Console Application" project==
+== Step 1 - Create a new "Console Application" project ==
 
 Remember to set choose .NET Framework 3.5 or higher. Choose C#, VB.NET or whatever language you are most comfortable with - NCron does not care, but the code samples on this website are mostly in C#.
 
 http://ncron.googlecode.com/svn/wiki/images/intro-newproj.png
 
-==Step 2 - Add a reference to the NCron assembly==
+== Step 2 - Add a reference to the NCron assembly ==
 
 Make sure you have the newest public release of NCron (or your own build if you prefer) somewhere on your file system. Use the "Add Reference..." dialog to reference the assembly from your console application:
 
 http://ncron.googlecode.com/svn/wiki/images/intro-addref.png
 
-==Step 3 - Add one of more job types to your project==
+You will also need to add a reference to `System.Configuration.Install`, which can be found in the .NET tab of the "Add reference..." dialog. Future versions of NCron might remove this annoying dependency.
 
-Simply create classes in your project (or in seperate library projects referenced by the console application), and let your classes extend the abstract CronJob class. The class only has an abstract method Execute() which you will need to implement. This is where you place the logic of your job:
+== Step 3 - Add one of more job types to your project ==
+
+Simply create classes in your project (or in seperate library projects referenced by the console application), and let your classes extend the abstract `CronJob` class. The class has an abstract method `Execute()` which you will need to implement. This is where you place the logic of your job:
 
 {{{
-public class RecordDayOfWeekJob : NCron.CronJob
+public class DataUpdateJob : NCron.CronJob
 {
     public override void Execute()
     {
-        string dayOfWeek = DateTime.Now.DayOfWeek.ToString();
-        System.IO.File.WriteAllText(@"c:\dayofweek.txt", dayOfWeek);
+        System.IO.File.Copy(@"\\corp\sales\export.dat", @"e:\data\sales.dat");
     }
 }
 }}}
 
-If your job implementation uses unmanaged resources, you can override the Dispose(bool) method to ensure that everything gets cleaned up after use.
+Tip: If your job implementation uses unmanaged resources, you should also override the `Dispose(bool)` method, ensuring that everything gets cleaned up after use.
 
-==Step 4 - Add one line of boiler plate code==
+== Step 4 - Bootstrap the application entry point ==
 
-When you created your project, Visual Studio created a Program.cs file for you. This files contains a class with a static method Main(), serving as the entry point of your application. From this method you will need to invoke the NCron service, passing along the provided command line arguments:
+When you created your project, Visual Studio created a Program.cs file for you. This files contains a class with a static method Main(), serving as the entry point of your application. You will need to make the following changes to Program.cs, in order to bootstrap NCron:
+
+ * The class must be declared as `public class` rather stan `static class`.
+ * The class must extend the `NCron.Service.EntryPoint` class.
+ * The `Main()` method must invoke `Bootstrap()` method.
+
+If it sounds like a lot of work - it really is not - just copy/paste the template below:
 
 {{{
 using NCron.Service;
-using NCron.Service.Reflection;
+using NCron.Fluent.Crontab;
+using NCron.Fluent.Generics;
 
-static void Main(string[] args)
+public class Program : EntryPoint
 {
-    Bootstrap.Main(args, ServiceSetup);
+    static void Main(string[] args)
+    {
+        Bootstrap(args, ServiceSetup);
+    }
+
+    static void ServiceSetup(SchedulingService service)
+    {
+    }
 }
 }}}
 
-After adding this line, your program will no longer compile, but we will fix this in the next step.
-
-It is recommended that you do not do anything else in the Main() method, as debugging exceptions thrown here is a pain, when your application is running as a Windows service.
+Tip: It is _highly_ recommended that you do not do anything in the Main() method, except from calling `Bootstrap()`. Exceptions thrown in the `Main()` method is extremely hard to debug when your application is running as a Windows service. Do whatever you have to do in the `ServiceSetup()` method instead.
 
 ==Step 5 - Schedule your task for execution==
 
-Now, let's fix that compile error by adding the missing method to the Program class:
+We are now ready to add our first schedule to the service. Try adding the following to the `SerivceSetup` method body:
 
 {{{
-static void ServiceSetup(NCron.SchedulingService service)
-{
-    service.At("0 0 * * *").Run<RecordDayOfWeekJob>();
-}
+service.Hourly().Run<RecordDayOfWeekJob>();
 }}}
 
-If your are wondering what the magic string "0 0 * * *" means, it is a [crontab expression]. These strings let you define date/time patterns in a very consise manner, and they are used for job scheduling on most unix based systems. This specific crontab tells the system to run the job at midnight each day. If you really don't like them, you are welcome to use one of the overloads of AddSchedule() that takes an ISchedule instead of a string.
+This obviously tells NCron to execute your job once every hour. The fluent API is extremely flexible, and it enables you to specify (almost) any [FluentScheduling schedule] for several flavors of [FluentJobRegistration job registration].
 
 ==Step 6 - Compile, deploy and start service==
 

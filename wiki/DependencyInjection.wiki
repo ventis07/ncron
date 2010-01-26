@@ -1,11 +1,10 @@
 #summary Dependency injection (DI) using popular IoC containers
-#labels Featured
 
 = Dependency injection in NCron =
 
 When building a scheduling service for an enterprise application, your jobs are likely to depend on other components/services from your application infrastructure. A job that updates order states might need a `OrderRepository`, and a job that send mail notifications might need an `IMailer`.
 
-As you have seen in the [JobRegistration basic samples], NCron knows how to instantiate jobs using lambdas, allowing to resolve dependencies manually when setting up the `SchedulingService`. However, as soon as your dependency graph gets more than one layer deep - or when your dependencies need explicit disposal - this will get messy, and you should consider using automatic dependency injection.
+As you have seen in the [FluentJobRegistration basic samples], NCron knows how to instantiate jobs using lambdas, allowing to resolve dependencies manually when setting up the `SchedulingService`. However, as soon as your dependency graph gets more than one layer deep - or when your dependencies need explicit disposal - this will get messy, and you should consider using automatic dependency injection.
 
 == Using a third-party IoC library ==
 
@@ -35,7 +34,7 @@ static void ServiceSetup(SchedulingService service)
 }
 }}}
 
-Notice the namespaces included by `using` statements in the sample code. `NCron.Fluent.Reflection` is left out in favor of `NCron.Integration.Autofac` which provides similar extension methods on the fluent API. This means that the `Run<TJob>()` method call in the last line uses Autofac, rather than the default instantiation technique.
+Notice the namespaces included by `using` statements in the sample code. `NCron.Fluent.Generics` is left out in favor of `NCron.Integration.Autofac` which provides similar extension methods on the fluent API. This means that the `Run<TJob>()` method call in the last line uses Autofac, rather than the default instantiation technique.
 
 By using the `ContainerScoped()` modifier for the job, we tell Autofac to create a new instance of the component for each container. The integration package ensures that each job execution is done in a fresh container, nested within the `RootContainer`. In the sample, the same `IMailer` is used for each job execution (even for other jobs dependent on the interface), while a new `IDatabase` is instantiated (and released) for each execution.
 
@@ -50,14 +49,15 @@ public static class AutofacIntegration
 {
     public static IContainer RootContainer { private get; set; }
 
-    public static void Run<T>(this SchedulePart part) where T : ICronJob
+    public static JobPart Run<TJob>(this SchedulePart part)
+        where TJob : ICronJob
     {
-        part.With(() => RootContainer.CreateInnerContainer()).Run(c => c.Resolve<T>());
+        return part.With(() => RootContainer.CreateInnerContainer()).Run(c => c.Resolve<TJob>());
     }
 
-    public static void Run(this SchedulePart part, string serviceName)
+    public static JobPart Run(this SchedulePart part, string serviceName)
     {
-        part.With(() => RootContainer.CreateInnerContainer()).Run(c => c.Resolve<ICronJob>(serviceName));
+        return part.With(() => RootContainer.CreateInnerContainer()).Run(c => c.Resolve<ICronJob>(serviceName));
     }
 }
 }}}
