@@ -31,7 +31,7 @@ service.At("*/30 8-17 * * 1-5").Run<LookAtStackoverflow>();
 
 Some people seem to suffer from allergy to strings, and if you belong to this group, the crontab expressions might scare you. Try to think of crontab expressions as a programming language for time schedules - similar to what regular expressions are to strings. If that does not help, remove the `using NCron.Fluent.Crontab` statement and continue reading.
 
-== Adding schedules without helpers ==
+== Adding schedules without using helpers ==
 
 There might be cases where you need (or think you need) a schedule which can not be expressed by a crontab expression. In these cases, you are able to fall back to the `At(Func<DateTime, DateTime>)` method provided directly in the `NCron.Fluent` namespace. This lets you define a method that computes the next occurence in the schedule from a specified base time (last execution or start of service):
 
@@ -39,7 +39,7 @@ There might be cases where you need (or think you need) a schedule which can not
 // Every night at midnight (0 1 * * *)
 service.At(dt => dt.AddDays(1).Date).Run<EnterNewDay>();
 
-// Frequent in the beginning of each moth, then gradually less frequent.
+// Frequent in the beginning of each month, then gradually less frequent.
 service.At(dt => dt.AddHours(dt.Day)).Run<BuyNewGadget>();
 }}}
 
