@@ -16,7 +16,7 @@ service.Weekly().Run<PlayBadminton>();
 service.Monthly().Run<VisitParents>();
 }}}
 
-If you want to run at job _twice_ every day, or if you need your job to be executed at a specific time of the day, you will need something more powerful. The recommended solution is to use the `At(string)` extension method, which will accept any [/p/ncrontab/wiki/CrontabExpression crontab expression] (external link) as parameter. These expressions are succinct, yet extremely flexible, and they are widely used on *nix/BSD systems.
+If you want to run at job _twice_ every day, or if you need your job to be executed at a specific time of the day, you will need something more powerful. The recommended solution is to use the `At(string)` extension method, which will accept any [http://code.google.com/p/ncrontab/wiki/CrontabExpression crontab expression] (external link) as parameter. These expressions are succinct, yet extremely flexible, and they are widely used on Unix/BSD systems.
 
 {{{
 // Every sunday morning (I wish).
