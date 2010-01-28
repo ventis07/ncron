@@ -1,5 +1,4 @@
 #summary Explore the fluent job registration API
-#labels Featured
 
 = Registering jobs with NCron =
 
