@@ -20,7 +20,7 @@ If you want to run at job _twice_ every day, or if you need your job to be execu
 
 {{{
 // Every sunday morning (I wish).
-service.At("0 9 * * 1").Run<EatBaconAndEggs>();
+service.At("0 9 * * 0").Run<EatBaconAndEggs>();
 
 // At nine in the morning, on the first day of each quarter.
 service.At("0 8 1 1,4,7,10 *").Run<SubmitVatDeclaration>();
