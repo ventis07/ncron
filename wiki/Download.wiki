@@ -1,0 +1,9 @@
+#summary NCron can be downloaded via NuGet!
+
+= Download =
+
+Download and reference NCron from your project using NuGet:
+
+{{{
+Install-Package NCron
+}}}
